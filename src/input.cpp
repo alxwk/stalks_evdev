@@ -78,13 +78,14 @@ void timer_thr(stop_token stoken, input_n_t btn)
     using namespace chrono_literals;
 
     time_cntr = 0;
-    const auto delay = 500ms;
+    const auto start_delay  = 300ms,
+               repeat_delay = 300ms;
 
-    this_thread::sleep_for(delay);
+    this_thread::sleep_for(start_delay);
     while (!stoken.stop_requested()) {
         ++time_cntr;
         btn_click(btn);
-        this_thread::sleep_for(delay);
+        this_thread::sleep_for(repeat_delay);
     }
 }
 
