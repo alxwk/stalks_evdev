@@ -4,7 +4,7 @@ An ETS2/ATS input plugin for Moza Multifunction Stalks, improving input capabili
 
 For now, does the following:
 
-* Makes the Cruise contol stalk behave as cruise control should, namely:
+* Makes the Cruise Control stalk behave as cruise control should, namely:
   * flick down to remember the current speed;
   * flick up to resume the set speed;
   * hold up or down to change speed;
