@@ -78,8 +78,8 @@ void timer_thr(stop_token stoken, input_n_t btn)
     using namespace chrono_literals;
 
     time_cntr = 0;
-    const auto start_delay  = 300ms,
-               repeat_delay = 300ms;
+    const auto start_delay  = 500ms,
+               repeat_delay = 500ms;
 
     this_thread::sleep_for(start_delay);
     while (!stoken.stop_requested()) {
@@ -170,14 +170,9 @@ void evdev_thr(stop_token stop)
             int res = libevdev_next_event(input_dev, flags, &ev);
 
             if (res != -EAGAIN) {
-
-//                if (ev.type == EV_KEY) {
-//                    game_log(SCS_LOG_TYPE_message, (to_string(ev.code)+":: "+to_string(ev.value)).c_str() );
-                // }
                 auto p = evt_map.find(ev);
 
                 if (p != evt_map.end()) {
-//                    game_log(SCS_LOG_TYPE_message, (to_string(ev.code)+": "+to_string(ev.value)).c_str() );
                     p->second();
                 }
             }
