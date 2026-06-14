@@ -71,28 +71,28 @@ SCSAPI_RESULT scs_telemetry_init(const scs_u32_t version, const scs_telemetry_in
         // incompatible values (major change).
         const scs_u32_t MINIMAL_VERSION = SCS_TELEMETRY_EUT2_GAME_VERSION_1_00;
         if (version_params->common.game_version < MINIMAL_VERSION) {
-            //            log_line("WARNING: Too old version of the game, some features might behave incorrectly");
+            game_log(SCS_LOG_TYPE_warning, "WARNING: Too old version of the game, some features might behave incorrectly");
         }
         // Future versions are fine as long the major version is not changed.
         const scs_u32_t IMPLEMENTED_VERSION = SCS_TELEMETRY_EUT2_GAME_VERSION_CURRENT;
         if (SCS_GET_MAJOR_VERSION(version_params->common.game_version) > SCS_GET_MAJOR_VERSION(IMPLEMENTED_VERSION)) {
-            //            log_line("WARNING: Too new major version of the game, some features might behave incorrectly");
+            game_log(SCS_LOG_TYPE_warning, "WARNING: Too new major version of the game, some features might behave incorrectly");
         }
     } else if (strcmp(version_params->common.game_id, SCS_GAME_ID_ATS) == 0) {
         // Below the minimum version there might be some missing features (only minor change) or
         // incompatible values (major change).
         const scs_u32_t MINIMAL_VERSION = SCS_TELEMETRY_ATS_GAME_VERSION_1_00;
         if (version_params->common.game_version < MINIMAL_VERSION) {
-            //            log_line("WARNING: Too old version of the game, some features might behave incorrectly");
+            game_log(SCS_LOG_TYPE_warning, "WARNING: Too old version of the game, some features might behave incorrectly");
         }
 
         // Future versions are fine as long the major version is not changed.
         const scs_u32_t IMPLEMENTED_VERSION = SCS_TELEMETRY_ATS_GAME_VERSION_CURRENT;
         if (SCS_GET_MAJOR_VERSION(version_params->common.game_version) > SCS_GET_MAJOR_VERSION(IMPLEMENTED_VERSION)) {
-            //            log_line("WARNING: Too new major version of the game, some features might behave incorrectly");
+            game_log(SCS_LOG_TYPE_warning, "WARNING: Too new major version of the game, some features might behave incorrectly");
         }
     } else {
-        //    log_line("WARNING: Unsupported game, some features or values might behave incorrectly");
+        game_log(SCS_LOG_TYPE_warning, "WARNING: Unsupported game, some features or values might behave incorrectly");
     }
 
     // Remember the function we will use for logging.

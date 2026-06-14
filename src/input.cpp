@@ -96,6 +96,7 @@ void delay_thr(input_n_t btn)
     btn_click(btn);
 }
 
+__attribute__((unused))
 auto ie_less = [](const input_event& e1, const input_event& e2)
 {
     return tie(e1.type, e1.code, e1.value) < tie(e2.type, e2.code, e2.value);
