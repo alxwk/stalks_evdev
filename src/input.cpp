@@ -19,19 +19,18 @@ namespace {
 
 struct libevdev *input_dev = nullptr;
 
-const auto inputs = to_array<scs_input_device_input_t>({
-    {"transemi", "Auto_Seq toggle", SCS_VALUE_TYPE_bool},
-    {"parkingbrake", "Parking brake toggle", SCS_VALUE_TYPE_bool},
-    {"gear0", "Neutral gear position", SCS_VALUE_TYPE_bool},
-    {"geardrive", "Drive gear position", SCS_VALUE_TYPE_bool},
-    {"gearreverse", "Reverse gear position", SCS_VALUE_TYPE_bool},
-    {"cruiectrl", "CC toggle", SCS_VALUE_TYPE_bool},
-    {"cruiectrlres", "CC resume toggle", SCS_VALUE_TYPE_bool},
-    {"cruiectrlinc", "CC increment toggle", SCS_VALUE_TYPE_bool},
-    {"cruiectrldec", "CC decrement toggle", SCS_VALUE_TYPE_bool}
-});
+const auto inputs = to_array<scs_input_device_input_t>(
+    {{.name = "transemi",       .display_name = "Auto_Seq toggle",          .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "parkingbrake",   .display_name = "Parking brake toggle",     .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "gear0",          .display_name = "Neutral gear position",    .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "geardrive",      .display_name = "Drive gear position",      .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "gearreverse",    .display_name = "Reverse gear position",    .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "cruiectrl",      .display_name = "CC toggle",                .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "cruiectrlres",   .display_name = "CC resume toggle",         .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "cruiectrlinc",   .display_name = "CC increment toggle",      .value_type = SCS_VALUE_TYPE_bool},
+     {.name = "cruiectrldec",   .display_name = "CC decrement toggle",      .value_type = SCS_VALUE_TYPE_bool}});
 
-enum input_n_t {
+enum input_n_t : uint8_t {
     IN_AUTOSEQ  = 0, 
     IN_PBRAKE   = 1,
     IN_NEUTRAL  = 2,
@@ -65,7 +64,7 @@ unsigned int time_cntr = 0;
 
 void stop_thread(jthread* & thr)
 {
-    if (thr) {
+    if (thr != nullptr) {
         thr->request_stop();
         thr->join();
         delete thr;
@@ -132,7 +131,7 @@ const map<input_event, function<void()>, decltype(ie_less)> evt_map {
     // }},
     {{.type=EV_KEY, .code=715, .value=1}, [](){
 //         prev_cc = (active_cc > 0.0);
-         if (active_cc) btn_click(IN_CC);     // cancel only, don't turn on if off
+         if (active_cc != 0.0) btn_click(IN_CC);     // cancel only, don't turn on if off
     }},
     {{.type=EV_KEY, .code=713, .value=1}, [](){ // down
         stop_thread(timer);
@@ -140,7 +139,7 @@ const map<input_event, function<void()>, decltype(ie_less)> evt_map {
     }},
     {{.type=EV_KEY, .code=713, .value=0}, [](){ // down
          if (time_cntr == 0) {
-             if (active_cc) {
+             if (active_cc != 0.0) {
                  //delay for the 2nd press
                  thread t(delay_thr, IN_CC);
                  t.detach();
@@ -166,9 +165,9 @@ void evdev_thr(stop_token stop)
     unsigned int flags = LIBEVDEV_READ_FLAG_NORMAL;
 
     while (!stop.stop_requested()) {
-        if (libevdev_has_event_pending(input_dev)) {
+        if (libevdev_has_event_pending(input_dev) != 0) {
             input_event ev;
-            int res = libevdev_next_event(input_dev, flags, &ev);
+            int const res = libevdev_next_event(input_dev, flags, &ev);
 
             if (res != -EAGAIN) {
                 auto p = evt_map.find(ev);
@@ -185,7 +184,9 @@ void evdev_thr(stop_token stop)
     }
 }
 
-SCSAPI_RESULT input_event_callback(scs_input_event_t *const event_info, const scs_u32_t flags, const scs_context_t)
+SCSAPI_RESULT input_event_callback(scs_input_event_t *const event_info,
+                                   const scs_u32_t /*flags*/,
+                                   const scs_context_t /*unused NOLINT(misc-misplaced-const) */)
 {
     SCSAPI_RESULT res = SCS_RESULT_not_found;
 
@@ -204,7 +205,7 @@ int init_input_dev()
 {
     using namespace filesystem;
 
-    directory_entry dir("/dev/input/by-id");
+    directory_entry const dir("/dev/input/by-id");
     const string evdev_name = "Gudsen_MOZA_Multi-function_Stalk";
 
     auto const& p = find_if(directory_iterator(dir), directory_iterator(), [&evdev_name](auto const &f)
@@ -217,7 +218,7 @@ int init_input_dev()
         return -1;
     }
 
-    int fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK);
+    int const fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK);
 
     if (fd < 0) {
         game_log(SCS_LOG_TYPE_error, strerror(errno));
@@ -229,9 +230,9 @@ int init_input_dev()
 
 } // namespace
 
-SCSAPI_RESULT scs_input_init(const scs_u32_t version, const scs_input_init_params_t *const params)
+SCSAPI_RESULT scs_input_init(const scs_u32_t /*version*/, const scs_input_init_params_t *const params)
 {
-    const scs_input_init_params_v100_t *const version_params = static_cast<const scs_input_init_params_v100_t *>(params);
+    const auto *const version_params = static_cast<const scs_input_init_params_v100_t *>(params);
 
     if (init_input_dev() != 0) {
         game_log(SCS_LOG_TYPE_error, "Unable to open an input device");
@@ -250,7 +251,7 @@ SCSAPI_RESULT scs_input_init(const scs_u32_t version, const scs_input_init_param
     device_info.input_count = inputs.size();
     device_info.inputs = inputs.data();
     device_info.input_event_callback = input_event_callback;
-    device_info.callback_context = NULL;
+    device_info.callback_context = nullptr;
 
     if (version_params->register_device(&device_info) != SCS_RESULT_ok) {
         version_params->common.log(SCS_LOG_TYPE_error, "Unable to register device");
@@ -267,7 +268,7 @@ SCSAPI_VOID scs_input_shutdown()
     stop_thread(thr);
 
     if (input_dev) {
-        int fd = libevdev_get_fd(input_dev);
+        int const fd = libevdev_get_fd(input_dev);
 
         libevdev_free(input_dev);
         close(fd);

@@ -5,14 +5,14 @@
 
 extern scs_log_t game_log;
 
-enum shifter_mode_t {
+enum shifter_mode_t : uint8_t {
     SM_UNKNOWN, SM_ARCADE, SM_AUTOMATIC, SM_MANUAL, SM_HSHIFTER
 };
 
 extern shifter_mode_t active_shifter;
 extern bool active_shifter_manual;
 
-enum pos_t {
+enum pos_t : uint8_t {
     POS_M, POS_D, POS_N, POS_R, POS_P, POS_U
 };
 

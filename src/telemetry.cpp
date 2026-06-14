@@ -18,9 +18,11 @@ using namespace std;
 
 namespace {
 
-SCSAPI_VOID telemetry_configuration(const scs_event_t event, const void *const event_info, const scs_context_t)
+SCSAPI_VOID telemetry_configuration(const scs_event_t /*event*/,
+                                    const void *const event_info,
+                                    const scs_context_t /*unused*/)
 {
-    const struct scs_telemetry_configuration_t *const info = static_cast<const scs_telemetry_configuration_t *>(event_info);
+    const auto *const info = static_cast<const scs_telemetry_configuration_t *>(event_info);
 
     for (auto const* p = info->attributes; p->name; ++p) {
         if (0 == strcmp(p->name, SCS_TELEMETRY_CONFIG_ATTRIBUTE_shifter_type)) {
@@ -42,13 +44,19 @@ SCSAPI_VOID telemetry_configuration(const scs_event_t event, const void *const e
     active_shifter_manual = (active_shifter == SM_MANUAL);
 }
 
-SCSAPI_VOID telemetry_channel_parking(const scs_string_t name, const scs_u32_t index, const scs_value_t *const value, const scs_context_t)
+SCSAPI_VOID telemetry_channel_parking(const scs_string_t /*name*/,
+                                      const scs_u32_t /*index*/,
+                                      const scs_value_t *const value,
+                                      const scs_context_t /*unused*/)
 {
     active_brake = value->value_bool.value;
     //    game_log(SCS_LOG_TYPE_message, ("brake: " + to_string(active_brake)).c_str());
 }
 
-SCSAPI_VOID telemetry_channel_cc(const scs_string_t name, const scs_u32_t index, const scs_value_t *const value, const scs_context_t)
+SCSAPI_VOID telemetry_channel_cc(const scs_string_t /*name*/,
+                                 const scs_u32_t /*index*/,
+                                 const scs_value_t *const value,
+                                 const scs_context_t /*unused*/)
 {
     active_cc = value->value_float.value;
     // game_log(SCS_LOG_TYPE_message, ("cc="+to_string(active_cc*3.6)).c_str());
@@ -64,7 +72,7 @@ SCSAPI_RESULT scs_telemetry_init(const scs_u32_t version, const scs_telemetry_in
         return SCS_RESULT_unsupported;
     }
 
-    const scs_telemetry_init_params_v101_t *const version_params = static_cast<const scs_telemetry_init_params_v101_t *>(params);
+    const auto *const version_params = static_cast<const scs_telemetry_init_params_v101_t *>(params);
 
     if (strcmp(version_params->common.game_id, SCS_GAME_ID_EUT2) == 0) {
         // Below the minimum version there might be some missing features (only minor change) or
@@ -101,14 +109,14 @@ SCSAPI_RESULT scs_telemetry_init(const scs_u32_t version, const scs_telemetry_in
 
     // Register for the configuration info. As this example only prints the retrieved
     // data, it can operate even if that fails.
-    bool events_registered =
-        (version_params->register_for_event(SCS_TELEMETRY_EVENT_configuration, telemetry_configuration, NULL) == SCS_RESULT_ok) &&
+    bool const events_registered =
+        (version_params->register_for_event(SCS_TELEMETRY_EVENT_configuration, telemetry_configuration, nullptr) == SCS_RESULT_ok) &&
         (version_params->register_for_channel(SCS_TELEMETRY_TRUCK_CHANNEL_parking_brake,
                                               SCS_U32_NIL, SCS_VALUE_TYPE_bool, SCS_TELEMETRY_CHANNEL_FLAG_none,
-                                              telemetry_channel_parking, NULL) == SCS_RESULT_ok) &&
+                                              telemetry_channel_parking, nullptr) == SCS_RESULT_ok) &&
         (version_params->register_for_channel(SCS_TELEMETRY_TRUCK_CHANNEL_cruise_control,
                                               SCS_U32_NIL, SCS_VALUE_TYPE_float, SCS_TELEMETRY_CHANNEL_FLAG_none,
-                                              telemetry_channel_cc, NULL) == SCS_RESULT_ok);
+                                              telemetry_channel_cc, nullptr) == SCS_RESULT_ok);
 
     if (! events_registered) {
         // Registrations created by unsuccessfull initialization are
