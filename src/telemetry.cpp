@@ -24,7 +24,7 @@ SCSAPI_VOID telemetry_configuration(const scs_event_t /*event*/,
 {
     const auto *const info = static_cast<const scs_telemetry_configuration_t *>(event_info);
 
-    for (auto const* p = info->attributes; p->name; ++p) {
+    for (auto const* p = info->attributes; p->name; ++p) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         if (0 == strcmp(p->name, SCS_TELEMETRY_CONFIG_ATTRIBUTE_shifter_type)) {
             if (0 == strcmp(p->value.value_string.value, SCS_SHIFTER_TYPE_arcade)) {
                 active_shifter = SM_ARCADE;

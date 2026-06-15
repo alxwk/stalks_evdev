@@ -42,6 +42,18 @@ enum input_n_t : uint8_t {
     IN_CCDEC    = 8
 };
 
+enum : uint16_t {
+    STALK_RIGHT_ROCKER_POS0 = 301, // bottom
+    STALK_RIGHT_ROCKER_POS1 = 302,
+    STALK_RIGHT_ROCKER_POS2 = 303,
+    STALK_RIGHT_ROCKER_POS3 = 704,
+    STALK_RIGHT_ROCKER_POS4 = 705, // top
+
+    STALK_CC_DOWN   = 713,
+    STALK_CC_UP     = 714,
+    STALK_CC_PULL   = 715
+};
+
 jthread *thr = nullptr;
 jthread *timer = nullptr;
 
@@ -103,41 +115,38 @@ auto ie_less = [](const input_event& e1, const input_event& e2)
 
 const map<input_event, function<void()>, decltype(ie_less)> evt_map {
 #ifdef MERCEDES
-    {input_event({.type=EV_KEY, .code=301, .value=1}), [](){
+    {input_event({.type=EV_KEY, .code=STALK_RIGHT_ROCKER_POS0, .value=1}), [](){
         input_queue.emplace(IN_REVERSE, false);
         input_queue.emplace(IN_NEUTRAL, true);
         btn_click(IN_PBRAKE);
     }},
-    {{.type=EV_KEY, .code=302, .value=1}, [](){
+    {{.type=EV_KEY, .code=STALK_RIGHT_ROCKER_POS1, .value=1}, [](){
         input_queue.emplace(IN_REVERSE, true);
         if (active_brake) btn_click(IN_PBRAKE);
     }},
-    {{.type=EV_KEY, .code=303, .value=1}, [](){
+    {{.type=EV_KEY, .code=STALK_RIGHT_ROCKER_POS2, .value=1}, [](){
         input_queue.emplace(IN_REVERSE, false);
         input_queue.emplace(IN_DRIVE, false);
         input_queue.emplace(IN_NEUTRAL, true);
     }},
-    {{.type=EV_KEY, .code=704, .value=1}, [](){
+    {{.type=EV_KEY, .code=STALK_RIGHT_ROCKER_POS3, .value=1}, [](){
         input_queue.emplace(IN_NEUTRAL, false);
         input_queue.emplace(IN_DRIVE, true);
         if (active_shifter_manual) btn_click(IN_AUTOSEQ);
     }},
-    {{.type=EV_KEY, .code=705, .value=1}, [](){
+    {{.type=EV_KEY, .code=STALK_RIGHT_ROCKER_POS4, .value=1}, [](){
         btn_click(IN_AUTOSEQ);
     }},
 #endif
-    // {{.type=EV_KEY, .code=715, .value=0}, [](){
-    //      if (prev_cc) btn_click(IN_CCRES);
-    // }},
-    {{.type=EV_KEY, .code=715, .value=1}, [](){
+    {{.type=EV_KEY, .code=STALK_CC_PULL, .value=1}, [](){
 //         prev_cc = (active_cc > 0.0);
          if (active_cc != 0.0) btn_click(IN_CC);     // cancel only, don't turn on if off
     }},
-    {{.type=EV_KEY, .code=713, .value=1}, [](){ // down
+    {{.type=EV_KEY, .code=STALK_CC_DOWN, .value=1}, [](){
         stop_thread(timer);
         timer = new jthread(timer_thr, IN_CCDEC);
     }},
-    {{.type=EV_KEY, .code=713, .value=0}, [](){ // down
+    {{.type=EV_KEY, .code=STALK_CC_DOWN, .value=0}, [](){
          if (time_cntr == 0) {
              if (active_cc != 0.0) {
                  //delay for the 2nd press
@@ -149,11 +158,11 @@ const map<input_event, function<void()>, decltype(ie_less)> evt_map {
          }
         stop_thread(timer);
     }},
-    {{.type=EV_KEY, .code=714, .value=1}, [](){ // up
+    {{.type=EV_KEY, .code=STALK_CC_UP, .value=1}, [](){
         stop_thread(timer);
         timer = new jthread(timer_thr, IN_CCINC);
     }},
-    {{.type=EV_KEY, .code=714, .value=0}, [](){ // up
+    {{.type=EV_KEY, .code=STALK_CC_UP, .value=0}, [](){ // up
          if (time_cntr == 0) btn_click(IN_CCRES);
         stop_thread(timer);
     }},
@@ -166,7 +175,7 @@ void evdev_thr(stop_token stop)
 
     while (!stop.stop_requested()) {
         if (libevdev_has_event_pending(input_dev) != 0) {
-            input_event ev;
+            input_event ev{};
             int const res = libevdev_next_event(input_dev, flags, &ev);
 
             if (res != -EAGAIN) {
@@ -186,7 +195,7 @@ void evdev_thr(stop_token stop)
 
 SCSAPI_RESULT input_event_callback(scs_input_event_t *const event_info,
                                    const scs_u32_t /*flags*/,
-                                   const scs_context_t /*unused NOLINT(misc-misplaced-const) */)
+                                   const scs_context_t /*context*/)
 {
     SCSAPI_RESULT res = SCS_RESULT_not_found;
 
@@ -205,7 +214,7 @@ int init_input_dev()
 {
     using namespace filesystem;
 
-    directory_entry const dir("/dev/input/by-id");
+    const directory_entry dir("/dev/input/by-id");
     const string evdev_name = "Gudsen_MOZA_Multi-function_Stalk";
 
     auto const& p = find_if(directory_iterator(dir), directory_iterator(), [&evdev_name](auto const &f)
@@ -218,10 +227,10 @@ int init_input_dev()
         return -1;
     }
 
-    int const fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK);
+    const int fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK); // NOLINT(cppcoreguidelines-pro-type-vararg)
 
     if (fd < 0) {
-        game_log(SCS_LOG_TYPE_error, strerror(errno));
+        game_log(SCS_LOG_TYPE_error, strerror(errno)); // NOLINT(concurrency-mt-unsafe)
         return fd;
     }
 
@@ -243,10 +252,10 @@ SCSAPI_RESULT scs_input_init(const scs_u32_t /*version*/, const scs_input_init_p
     // mix as seen in controls.sii. Note that only some inputs are supported this way.
     // See documentation of SCS_INPUT_DEVICE_TYPE_semantical
 
-    scs_input_device_t device_info;
+    scs_input_device_t device_info{};
     memset(&device_info, 0, sizeof(device_info));
-    device_info.name = "virt_toggles";
-    device_info.display_name = "VirtualToggles";
+    device_info.name = "stalks_virt_toggles";
+    device_info.display_name = "Stalks Virtual Toggles";
     device_info.type = SCS_INPUT_DEVICE_TYPE_semantical;
     device_info.input_count = inputs.size();
     device_info.inputs = inputs.data();
