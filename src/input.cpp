@@ -84,7 +84,7 @@ void stop_thread(jthread* & thr)
     }
 }
 
-void timer_thr(stop_token stoken, input_n_t btn)
+void timer_thr(const stop_token &stoken, input_n_t btn)
 {
     using namespace chrono_literals;
 
@@ -163,12 +163,12 @@ const map<input_event, function<void()>, decltype(ie_less)> evt_map {
         timer = new jthread(timer_thr, IN_CCINC);
     }},
     {{.type=EV_KEY, .code=STALK_CC_UP, .value=0}, [](){ // up
-         if (time_cntr == 0) btn_click(IN_CCRES);
+        if (time_cntr == 0) btn_click(IN_CCRES);
         stop_thread(timer);
     }},
 };
 
-void evdev_thr(stop_token stop)
+void evdev_thr(const stop_token &stop)
 {
     using namespace chrono_literals;
     unsigned int flags = LIBEVDEV_READ_FLAG_NORMAL;
@@ -188,7 +188,7 @@ void evdev_thr(stop_token stop)
             if (res == LIBEVDEV_READ_STATUS_SYNC) flags = LIBEVDEV_READ_FLAG_SYNC;
         } else {
             flags = LIBEVDEV_READ_FLAG_NORMAL;
-            this_thread::sleep_for(50ms);
+            this_thread::sleep_for(20ms);
         }
     }
 }
@@ -227,10 +227,10 @@ int init_input_dev()
         return -1;
     }
 
-    const int fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK); // NOLINT(cppcoreguidelines-pro-type-vararg)
+    const int fd = open(p->path().c_str(), O_RDONLY|O_NONBLOCK);
 
     if (fd < 0) {
-        game_log(SCS_LOG_TYPE_error, strerror(errno)); // NOLINT(concurrency-mt-unsafe)
+        game_log(SCS_LOG_TYPE_error, strerror(errno));
         return fd;
     }
 
@@ -242,6 +242,8 @@ int init_input_dev()
 SCSAPI_RESULT scs_input_init(const scs_u32_t /*version*/, const scs_input_init_params_t *const params)
 {
     const auto *const version_params = static_cast<const scs_input_init_params_v100_t *>(params);
+
+    if (game_log == nullptr)    game_log = version_params->common.log;
 
     if (init_input_dev() != 0) {
         game_log(SCS_LOG_TYPE_error, "Unable to open an input device");

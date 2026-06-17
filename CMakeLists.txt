@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Ofast")
 
 include_directories(
     src
-    ../../games/scs/scs_sdk_1_14/include
+    ../scs_sdk_1_14/include
     /usr/include/libevdev-1.0
 )
 
@@ -19,10 +19,16 @@ add_library(stalks_evdev SHARED
     src/telemetry.cpp
 )
 
-#add_executable(test
-#    src/test.cpp
-#)
+add_executable(test
+    test/test.cpp
+)
 
 target_link_libraries(stalks_evdev
+    evdev
+)
+
+
+target_link_libraries(test
+    stalks_evdev
     evdev
 )
