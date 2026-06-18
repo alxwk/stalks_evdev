@@ -1,0 +1,10 @@
+id/bustype: 0003
+id/vendor: 346e
+id/product: 0024
+id/version: 0111
+
+vendor: "Gudsen"
+product: "MOZA Multi-function Stalk"
+name: "Gudsen MOZA Multi-function Stalk"
+
+/dev/input/by-id: "usb-Gudsen_MOZA_Multi-function_Stalk_28001F000953594233333020-if02-event-joystick"
