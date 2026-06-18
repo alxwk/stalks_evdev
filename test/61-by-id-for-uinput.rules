@@ -1,0 +1,4 @@
+# a rule for adding a "by-id" entry for a uinput imitation device (as the plugin searches by it)
+# needs to be put in /etc/udev/rules.d
+
+ACTION=="add", KERNEL=="event*", ATTRS{id/vendor}=="346e", ATTRS{id/product}=="0024", ATTRS{phys}=="", SYMLINK+="input/by-id/virtual-$attr{name}-event-$env{.INPUT_CLASS}"

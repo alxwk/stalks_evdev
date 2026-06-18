@@ -27,31 +27,29 @@ void proc(scs_input_event_t &event_info)
 int main()
 {
     int err;
-    struct libevdev *dev;
+    struct libevdev *evdev;
     struct libevdev_uinput *uidev;
 
-    dev = libevdev_new();
-    const string name = "Gudsen_MOZA_Multi-function_Stalk";
-    libevdev_set_name(dev, name.c_str());
-    libevdev_enable_event_type(dev, EV_KEY);
-    libevdev_enable_event_code(dev, EV_KEY, 713, NULL);
-    libevdev_enable_event_code(dev, EV_KEY, 714, NULL);
-    libevdev_enable_event_code(dev, EV_KEY, 715, NULL);
+    evdev = libevdev_new();
+    const string vendor = "Gudsen";
+    const string product = "MOZA Multi-function Stalk";
+    const string name = vendor + ' ' + product;
 
-    err = libevdev_uinput_create_from_device(dev, LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
+    libevdev_set_id_bustype(evdev, BUS_USB);
+    libevdev_set_id_vendor(evdev, 0x346e);
+    libevdev_set_id_product(evdev, 0x0024);
+
+    libevdev_set_name(evdev, name.c_str());
+    libevdev_enable_event_type(evdev, EV_KEY);
+    libevdev_enable_event_code(evdev, EV_KEY, 713, NULL);
+    libevdev_enable_event_code(evdev, EV_KEY, 714, NULL);
+    libevdev_enable_event_code(evdev, EV_KEY, 715, NULL);
+
+    err = libevdev_uinput_create_from_device(evdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
 
     if (err != 0) {
         cerr << "can't create uinput device: " << err << endl;
-    }
-
-    const string devnode = libevdev_uinput_get_devnode(uidev);
-
-    namespace fs = std::filesystem;
-
-    const fs::path link(string("/dev/input/by-id/usb-")+name);
-
-    if (!fs::exists(link)) {
-        fs::create_symlink(devnode, link);
+        return -1;
     }
 
     sleep(1);
