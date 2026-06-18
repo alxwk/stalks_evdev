@@ -8,7 +8,7 @@
 
 using namespace std;
 
-SCSAPI_RESULT scs_input_init(const scs_u32_t /*version*/, const scs_input_init_params_t *const params);
+namespace {
 
 scs_input_device_t indev;
 
@@ -22,6 +22,8 @@ void proc(scs_input_event_t &event_info)
         }
         cout << indev.inputs[event_info.input_index].display_name << ' ' << bool(event_info.value_bool.value) << endl;
     }
+}
+
 }
 
 int main()
@@ -65,7 +67,10 @@ int main()
         return SCS_RESULT_ok;
     };
 
-    SCSAPI_RESULT res = scs_input_init(0, &parms);
+    if (scs_input_init(0, &parms) != SCS_RESULT_ok) {
+        cerr << "error at plugin init" << endl;
+        return -1;
+    }
 
     cout << unitbuf;
 
@@ -73,9 +78,7 @@ int main()
 
     scs_input_event_t event_info;
 
-   /* Key press, report the event, send key release, and report again */
-
-    cout << "Short press down" << endl;
+    cout << "-- Short press down" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 713, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
@@ -87,7 +90,7 @@ int main()
     proc(event_info);
     sleep(1);
 
-    cout << "Long press down (0.3 s)" << endl;
+    cout << "-- Long press down (0.3 s)" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 713, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
@@ -99,7 +102,7 @@ int main()
     proc(event_info);
     sleep(1);
 
-    cout << "Long press down (0.6 s)" << endl;
+    cout << "-- Long press down (0.6 s)" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 713, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
@@ -111,7 +114,7 @@ int main()
     proc(event_info);
     sleep(1);
 
-    cout << "Long press down (1.6 s)" << endl;
+    cout << "-- Long press down (1.6 s)" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 713, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
@@ -123,7 +126,7 @@ int main()
     proc(event_info);
     sleep(1);
 
-    cout << "Short press up" << endl;
+    cout << "-- Short press up" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 714, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
@@ -135,7 +138,7 @@ int main()
     proc(event_info);
     sleep(1);
 
-    cout << "Long press up" << endl;
+    cout << "-- Long press up" << endl;
 
     libevdev_uinput_write_event(uidev, EV_KEY, 714, 1);
     libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
